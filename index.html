@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Origen Fotografía | Calendario Disponibilidad</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body { background-color: #0a0a0a; color: #f4f4f5; }
+        
+        /* Estados de disponibilidad */
+        .state-default { background-color: rgba(39, 39, 42, 0.3); color: #a1a1aa; }
+        .state-available { background-color: rgba(16, 185, 129, 0.2); color: #34d399; box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.5); }
+        .state-reserved { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.5); }
+        .state-busy { background-color: rgba(244, 63, 94, 0.2); color: #fb7185; box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.5); }
+        
+        /* Indicador de día actual */
+        .is-today::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background-color: currentColor; opacity: 0.5; }
+    </style>
+</head>
+<body class="font-sans selection:bg-zinc-800 min-h-screen flex flex-col">
+    <div class="max-w-md mx-auto px-4 py-8 sm:py-12 flex flex-col min-h-screen w-full">
+        
+        <!-- Header con Logo -->
+        <header class="text-center mb-10 flex flex-col items-center">
+            <!-- 
+              NOTA: La clase 'invert' hace que el logo negro se vea blanco. 
+              La clase 'opacity-90' le da un tono ligeramente más suave y elegante.
+            -->
+            <img 
+                src="logo.svg" 
+                alt="Origen Fotografía" 
+                class="h-24 sm:h-28 object-contain opacity-90"
+                referrerpolicy="no-referrer"
+            >
+            <h1 class="font-serif text-2xl font-medium tracking-wide text-zinc-300">Calendario de Disponibilidad</h1>
+        </header>
+
+        <!-- Contenedor del Calendario -->
+        <main class="flex-grow">
+            <div class="bg-zinc-900/50 border border-zinc-800/50 rounded-3xl p-6 backdrop-blur-sm shadow-2xl">
+                
+                <!-- Navegación de Meses -->
+                <div class="flex items-center justify-between mb-8">
+                    <button onclick="changeMonth(-1)" class="p-2 rounded-full hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <h2 class="font-serif text-xl font-medium capitalize" id="month-year-display">
+                        <!-- Se llena con JS -->
+                    </h2>
+                    <button onclick="changeMonth(1)" class="p-2 rounded-full hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Días de la semana -->
+                <div class="grid grid-cols-7 gap-1 mb-4 text-center text-xs font-medium text-zinc-500">
+                    <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div>
+                </div>
+
+                <!-- Cuadrícula del Calendario -->
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 sm:gap-2 justify-items-center">
+                    <!-- Los días se generan con JS -->
+                </div>
+            </div>
+
+            <!-- Leyenda -->
+            <div class="mt-8 space-y-3 px-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full bg-emerald-500/50 ring-1 ring-emerald-500/50"></div>
+                    <span class="text-sm text-zinc-300">Disponible</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full bg-amber-500/50 ring-1 ring-amber-500/50"></div>
+                    <span class="text-sm text-zinc-300">Reservado / En negociación</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full bg-rose-500/50 ring-1 ring-rose-500/50"></div>
+                    <span class="text-sm text-zinc-300">Ocupado / No disponible</span>
+                </div>
+            </div>
+            
+            <!-- Botón de Contacto -->
+            <div class="mt-10 text-center">
+                <a href="https://www.instagram.com/origen_fotografia/" target="_blank" class="inline-block bg-zinc-100 text-zinc-900 font-medium px-8 py-3 rounded-full hover:bg-white transition-colors shadow-lg">
+                    Solicitar Reserva
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        // =================================================================
+        // 📸 ZONA DE EDICIÓN DEL FOTÓGRAFO 📸
+        // =================================================================
+        // Añade aquí las fechas con su estado. 
+        // Formato: "AÑO-MES-DIA": "estado"
+        // Estados posibles: "available" (verde), "reserved" (amarillo), "busy" (rojo)
+        
+        const MIS_FECHAS = {
+            "15-04-2026": "available",
+            "16-04-2026": "reserved",
+            "20-04-2026": "busy",
+            "21-04-2026": "busy",
+            "02-05-2026": "available"
+        };
+        // =================================================================
+
+        let currentDate = new Date();
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+        });
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('month-year-display').innerHTML = `${monthNames[month]} <span class="text-zinc-500 font-sans text-lg">${year}</span>`;
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let firstDay = new Date(year, month, 1).getDay();
+            firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'h-10 w-10 sm:h-12 sm:w-12';
+                grid.appendChild(empty);
+            }
+			
+			const today = new Date();
+            const todayStr = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${String(i).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}-${year}`;
+                const state = MIS_FECHAS[dateStr] || 'default';
+                
+                const div = document.createElement('div');
+                div.className = `relative flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full text-sm font-medium state-${state} ${dateStr === todayStr && state === 'default' ? 'ring-1 ring-zinc-500' : ''} ${dateStr === todayStr ? 'is-today' : ''}`;
+                
+                div.innerText = i;
+                grid.appendChild(div);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+    </script>
+</body>
+</html>
